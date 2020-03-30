@@ -4,20 +4,16 @@
 #include "Arduino.h"
 
 // Single byte integer alias
-using uint8_t = unsigned char;
-using uint16_t = unsigned int;
+//using byte = unsigned char;
+//using int =  unsigned int;
 
 class Trajectory {
   public:
-    Trajectory(uint8_t delta_t, uint16_t* positions, uint16_t length);
-    Trajectory(char serialized[]);
+    Trajectory(int delta_t, int* positions, int length);
 
     // Methods
-    uint16_t nextStep();
+    int nextStep();
 
-    // Setters
-    void setDirection(bool direction);
-    
     // Getters
     int getLength();
     int getCurrentStep();
@@ -26,10 +22,8 @@ class Trajectory {
   private:
     int _cur_step;
     int _length;
-    uint16_t* _traj_pos;
-    uint8_t _delta_t;
-    // True value is increasing
-    bool _direction;
+    int* _traj_pos;
+    int _delta_t;
 
 };
 #endif

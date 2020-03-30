@@ -28,35 +28,4 @@ void loop() {
 // this function is registered as an event, see setup()
 void recieveTraj(int num_entries) {
 
-  if (traj_pos != 0){
-    delete [] traj_pos;
-  }
-
-  traj_pos = new uint8_t[num_entries/2];
-
-  if (traj_times != 0){
-    delete [] traj_times;
-  }
-
-  traj_times = new uint8_t[num_entries/2];
-  
-  for (int i = 0; i < num_entries/2; i++){
-    traj_pos[i] = Wire.read();
-    traj_times[i] = Wire.read();
-  }
-
-  /*traj = new Trajectory(traj_pos, traj_times);*/
-
-  Serial.print(sizeof(traj_pos));
-
-  Serial.print(" howMany: ");
-  Serial.println(num_entries);
-}
-
-void moveTo(int pos, int ms) {
-  
-}
-
-void followTraj() {
-  //Start by 0ing the servo?
 }
