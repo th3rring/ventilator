@@ -1,0 +1,27 @@
+[
+  {
+    "Sourcefile": null,
+    "Include": "",
+    "Includepath": "/home/therring/Downloads/arduino-1.8.10/hardware/arduino/avr/cores/arduino"
+  },
+  {
+    "Sourcefile": null,
+    "Include": "",
+    "Includepath": "/home/therring/Downloads/arduino-1.8.10/hardware/arduino/avr/variants/standard"
+  },
+  {
+    "Sourcefile": "/home/therring/Workspace/ventilator/Stepper_Alternator/build/sketch/Stepper_Alternator.ino.cpp",
+    "Include": "Stepper.h",
+    "Includepath": "/home/therring/Downloads/arduino-1.8.10/libraries/Stepper/src"
+  },
+  {
+    "Sourcefile": "/home/therring/Workspace/ventilator/Stepper_Alternator/build/sketch/Stepper_Alternator.ino.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/therring/Downloads/arduino-1.8.10/libraries/Stepper/src/Stepper.cpp",
+    "Include": "",
+    "Includepath": null
+  }
+]
