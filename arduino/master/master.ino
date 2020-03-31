@@ -2,7 +2,10 @@
 
 #define button_pin 7
 
+using uint = unsigned int;
+
 bool wave = true;
+bool on = true;
 
 void setup() {
   Wire.begin(); // join i2c bus (address optional for master)
@@ -28,25 +31,35 @@ void loop() {
 void transmitTraj() {
 
   Wire.beginTransmission(8); // transmit to device #8
+  /*if (on) {*/
   Wire.write('L');
-  if (wave) {
-  Wire.write(12);
-  wave = false;
-  } else {
+  /*if (wave) {*/
+  /*Wire.write(5);*/
+  /*wave = false;*/
+  /*} else {*/
+
+  //Write RR
   Wire.write(15); 
-  wave = true;
-  }
+
+  // Write inhale and exhale ratio
+  Wire.write(1);
+  Wire.write(2);
+
+  // Write setpoint
+  int setpoint = 2000;
+  Wire.write(byte(setpoint >> 8));
+  Wire.write(byte(setpoint & 0x00FF));
+
+  //Wire delta_t
   Wire.write(50);
 
-  /*Wire.write(String(traj_ptr->getLength()));*/
-  /*Wire.write(",");*/
-  /*Wire.write(String(traj_ptr->getDeltaTime()));*/
-  /*Wire.write('l');*/
-
-
-  /*for (int i = 0; i < traj_ptr->getLength(); i++){*/
-    /*Wire.write(",");*/
-    /*Wire.write(String(traj_ptr->nextStep()));*/
+  // Write hold as seconds and 10s of ms.
+  Wire.write(0);
+  Wire.write(50);
+  on = false;
+  /*} else {*/
+    /*Wire.write('X');*/
+    /*on = true;*/
   /*}*/
 
   Wire.endTransmission();    // stop transmitting

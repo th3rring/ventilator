@@ -2,15 +2,18 @@
 #include <Servo.h>
 #include <trajfactory.h>
 
+#define SERVO_MIN 2490
+#define SERVO_MAX 510
+
 TrajFactory tf = TrajFactory();
 Trajectory* traj_ptr = 0;
 Trajectory* temp  = 0;
 
 int rr;
 int delta_t;
-float ie = 0.5; //Hardcoded rn
-int setpoint = 2000; 
-int hold = 0;
+float ie;
+int setpoint;
+float hold;
 
 Servo servo;
 
@@ -68,7 +71,7 @@ void loop() {
 }
 
 void moveTo(int pos, int delta_t){
-  Serial.println(2490-pos);
+  Serial.println(SERVO_MIN-pos);
   /*servo.writeMicroseconds(2490-pos);*/
   delay(delta_t);
 }
@@ -100,10 +103,21 @@ void recieveTraj(int num_entries) {
     case 'L':
       // Load new params
       rr = Wire.read();
+
+      byte inhale = Wire.read();
+      byte exhale = Wire.read();
+      ie = float(inhale) / exhale;
+
+      byte high = Wire.read();
+      byte low = Wire.read();
+      setpoint = (high << 8) | low;
+
       delta_t = Wire.read();
-      ie = 0.5; //Hardcoded rn
-      setpoint = 2000; 
-      hold = 0;
+
+      byte hold_s = Wire.read();
+      byte hold_dec = Wire.read();
+      hold = hold_s + hold_dec/100.0;
+
       break;
   }
 }
