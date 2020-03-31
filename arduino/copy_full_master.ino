@@ -1,13 +1,18 @@
 #include <Wire.h>
+#include <trajfactory.h>
 
 #define button_pin 7
 
-bool wave = true;
+TrajFactory tf = TrajFactory();
+Trajectory* traj_ptr;
+
+
 
 void setup() {
-  Wire.begin(); // join i2c bus (address optional for master)
+  /*Wire.begin(); // join i2c bus (address optional for master)*/
+  traj_ptr = tf.build(10, 0.5, 2000, 0, 50);
   pinMode(button_pin, INPUT);
-  Serial.begin(9600);
+  Serial.begin(115200);
 }
 
 int button_state = 0;
@@ -27,16 +32,7 @@ void loop() {
 
 void transmitTraj() {
 
-  Wire.beginTransmission(8); // transmit to device #8
-  Wire.write('L');
-  if (wave) {
-  Wire.write(12);
-  wave = false;
-  } else {
-  Wire.write(15); 
-  wave = true;
-  }
-  Wire.write(50);
+  /*Wire.beginTransmission(8); // transmit to device #8*/
 
   /*Wire.write(String(traj_ptr->getLength()));*/
   /*Wire.write(",");*/
@@ -49,5 +45,12 @@ void transmitTraj() {
     /*Wire.write(String(traj_ptr->nextStep()));*/
   /*}*/
 
-  Wire.endTransmission();    // stop transmitting
+  /*Wire.endTransmission();    // stop transmitting*/
+  Serial.println(traj_ptr->getLength());
+  
+  for (int i = 0; i < traj_ptr->getLength(); i++) {
+  /*for (int i = 0; i < 100; i++) {*/
+    Serial.println(traj_ptr->nextStep());
+  }
+  
 }

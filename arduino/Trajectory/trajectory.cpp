@@ -21,15 +21,16 @@ Trajectory::Trajectory(int delta_t, int* positions, int length):
 int Trajectory::nextStep() {
 
   // Switch the direction of the trajectory if we're at the end.
-  if(_cur_step >= _length - 1 ) {
-    _cur_step = 0;
-  }
 
   // Find current position and duration
   int next =  *(_traj_pos + _cur_step);
 
   // Move the counter forward to the next step
   _cur_step++;
+
+  if(_cur_step >= _length) {
+    _cur_step = 0;
+  }
 
   return next;
 }
