@@ -39,23 +39,23 @@ void transmitTraj() {
   /*} else {*/
 
   //Write RR
-  Wire.write(15); 
+  Wire.write(12); 
 
   // Write inhale and exhale ratio
   Wire.write(1);
-  Wire.write(2);
+  Wire.write(3);
 
   // Write setpoint
-  int setpoint = 2000;
+  int setpoint = 1300;
   Wire.write(byte(setpoint >> 8));
   Wire.write(byte(setpoint & 0x00FF));
 
   //Wire delta_t
-  Wire.write(50);
+  Wire.write(20);
 
   // Write hold as seconds and 10s of ms.
   Wire.write(0);
-  Wire.write(50);
+  Wire.write(0);
   on = false;
   /*} else {*/
     /*Wire.write('X');*/

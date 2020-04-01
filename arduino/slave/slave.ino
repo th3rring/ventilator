@@ -3,7 +3,7 @@
 #include <trajfactory.h>
 
 #define SERVO_MIN 2490
-#define SERVO_MAX 510
+#define SERVO_MAX 500
 
 TrajFactory tf = TrajFactory();
 Trajectory* traj_ptr = 0;
@@ -71,8 +71,8 @@ void loop() {
 }
 
 void moveTo(int pos, int delta_t){
-  Serial.println(SERVO_MIN-pos);
-  /*servo.writeMicroseconds(2490-pos);*/
+  Serial.println(pos);
+  servo.writeMicroseconds(SERVO_MIN-pos);
   delay(delta_t);
 }
 
