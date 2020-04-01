@@ -16,6 +16,10 @@ void NhdDisplay::print(String st) {
   _serial_ptr->print(st);
 }
 
+void NhdDisplay::print(int val) {
+  _serial_ptr->print(String(val));
+}
+
 void NhdDisplay::println(String st) {
   _serial_ptr->println(st);
 }

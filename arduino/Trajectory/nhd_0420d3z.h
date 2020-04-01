@@ -14,6 +14,7 @@ class NhdDisplay {
     void begin(int baud);
 
     void print(String st);
+    void print(int val);
     void println(String st);
     //void print(int num);
     

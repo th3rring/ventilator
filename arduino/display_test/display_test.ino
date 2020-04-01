@@ -6,15 +6,16 @@
 
 NhdDisplay display(3);
 Encoder enc(5,6);
-EncoderManager man(&enc, 4);
+EncoderManager man(&enc, 4, 2);
 ButtonManager encoder_button(7, true);
 ButtonManager stop_button(11, false);
 
+// Default settings
 VentSettings vs = {'X', 12, 1, 3, 500, 0, 0, 0, 0}; 
 
 long pos = -999;
 int row = 0;
-int old_row = 0;
+int old_row = 1;
 
 void setup()
 {
@@ -33,7 +34,7 @@ void setup()
   display.setCursor(1,3);
   display.print(String(vs.tidal_volume));
   
-  display.setCursor(0,0);
+  display.setCursor(0,1);
   display.print(">");
 
   man.start();
@@ -46,14 +47,18 @@ void loop()
   stop_button.poll();
 
   int pos = man.getSelection();
-  writeCursor(pos);
+  /*Serial.println(pos);*/
 
   if (encoder_button.getButtonState()) {
     Serial.println("encoder pressed!"); 
+    man.setNumOptions(2);
+    man.setSelection(1);
   }
   if (stop_button.getButtonState()) {
     Serial.println("stop pressed!"); 
   }
+
+  writeCursor(pos);
 
 }
 

@@ -8,12 +8,17 @@ class EncoderManager {
 
   public:
     EncoderManager(Encoder* encoder_ptr, int num_options);
+    EncoderManager(Encoder* encoder_ptr, int num_options, int starting);
 
     void start();
     void poll();
+    void close();
+
     int getSelection();
     bool getButtonState();
-    void close();
+
+    void setNumOptions(int num_options);
+    void setSelection(int selection);
 
   private:
 

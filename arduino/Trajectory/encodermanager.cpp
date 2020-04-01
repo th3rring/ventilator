@@ -5,9 +5,14 @@ EncoderManager::EncoderManager(Encoder* encoder_ptr, int num_options) :
   _selection(0),
   _num_options(num_options) {}
 
+EncoderManager::EncoderManager(Encoder* encoder_ptr, int num_options, int starting) :
+  _encoder_ptr(encoder_ptr),
+  _selection(starting),
+  _num_options(num_options) {}
+
 void EncoderManager::start() {
-  _encoder_ptr->write(0);
-  _pos_ptr = new long;
+  _encoder_ptr->write(COUNTS_PER_STEP * _selection);
+  _pos_ptr = new long(COUNTS_PER_STEP * _selection);
 }
 
 void EncoderManager::poll() {
@@ -35,6 +40,16 @@ void EncoderManager::poll() {
 
 int EncoderManager::getSelection() {
   return _selection;
+}
+
+void EncoderManager::setSelection(int selection) {
+  _selection = selection;
+  _encoder_ptr->write(COUNTS_PER_STEP * _selection);
+  _pos_ptr = new long(COUNTS_PER_STEP * _selection);
+}
+
+void EncoderManager::setNumOptions(int num_options) {
+  _num_options = num_options;
 }
 
 void EncoderManager::close() {
