@@ -12,6 +12,7 @@ class EncoderManager {
     void start();
     void poll();
     int getSelection();
+    bool getButtonState();
     void close();
 
   private:
@@ -22,6 +23,8 @@ class EncoderManager {
     long* _pos_ptr;
     int _selection;
     int _num_options;
+    bool _button_state;
+    int _button_pin;
 
 };
 

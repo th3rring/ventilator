@@ -30,7 +30,7 @@ void EncoderManager::poll() {
       }
     }
 
-  }
+  }// Variables will change:
 }
 
 int EncoderManager::getSelection() {

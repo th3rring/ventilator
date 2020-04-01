@@ -1,10 +1,16 @@
 #include "nhd_0420d3z.h"
 #include "Encoder.h"
 #include "encodermanager.h"
+#include "buttonmanager.h"
+#include "ventsettings.h"
 
 NhdDisplay display(3);
 Encoder enc(5,6);
 EncoderManager man(&enc, 4);
+ButtonManager encoder_button(7, true);
+ButtonManager stop_button(11, false);
+
+VentSettings vs = {'X', 12, 1, 3, 500, 0, 0, 0, 0}; 
 
 long pos = -999;
 int row = 0;
@@ -24,6 +30,8 @@ void setup()
   char arr[100];
   sprintf(arr, "Number %i", test);
   display.print(arr);
+  display.setCursor(1,3);
+  display.print(String(vs.tidal_volume));
   
   display.setCursor(0,0);
   display.print(">");
@@ -33,61 +41,24 @@ void setup()
 
 void loop()
 {
-
-  /*long new_pos = enc.read();*/
-  /*if (new_pos != pos) {*/
-
-    /*[>if (delta < 0) {<]*/
-      /*[>row--;<]*/
-    /*[>} else if (delta > 0) {<]*/
-      /*[>row++;<]*/
-    /*[>}<]*/
-
-    /*[>if (row > 3) {<]*/
-    /*[>row = 3;<]*/
-    /*[>} else if (row < 0) {<]*/
-    /*[>row = 0; <]*/
-    /*[>}<]*/
-    /*if (new_pos < 0){*/
-      /*enc.write(0);*/
-      /*new_pos = 0;*/
-    /*} else if (new_pos > 16) {*/
-      /*enc.write(16);*/
-      /*new_pos = 16;*/
-    /*}*/
-
-    /*pos = new_pos;*/
-
-    /*if (0 <= pos && pos < 4) {*/
-      /*writeCursor(0);*/
-    /*} else if (4 <= pos && pos < 8) {*/
-      /*writeCursor(1);*/
-    /*} else if (8 <= pos && pos < 12) {*/
-      /*writeCursor(2);*/
-    /*} else if (12 <= pos && pos < 16) {*/
-      /*writeCursor(3);*/
-    /*}*/
-
-
-
-  /*}*/
-
   man.poll();
+  encoder_button.poll();
+  stop_button.poll();
 
   int pos = man.getSelection();
-  Serial.println(pos);
   writeCursor(pos);
 
-
-
+  if (encoder_button.getButtonState()) {
+    Serial.println("encoder pressed!"); 
+  }
+  if (stop_button.getButtonState()) {
+    Serial.println("stop pressed!"); 
+  }
 
 }
 
 void writeCursor(int row) {
   if (row != old_row) {
-    Serial.print(old_row);
-    Serial.print(" ");
-    Serial.println(row);
     display.setCursor(0,old_row);
     /*display.print("");*/
     display.remove();
