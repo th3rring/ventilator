@@ -5,6 +5,7 @@
 #include "encodermanager.h"
 #include "nhd_0420d3z.h"
 #include "ventsettings.h"
+#include "Encoder.h"
 
 class Panel {
   public:
@@ -19,7 +20,6 @@ class Panel {
     // Pointers for settings and input.
     NhdDisplay* _disp_ptr;
     Encoder* _encoder_ptr;
-    EncoderManager _em;
     ButtonManager* _em_button_ptr;
     ButtonManager* _stop_button_ptr;
     VentSettings* _vs_ptr;
@@ -29,28 +29,31 @@ class Panel {
 
 class SplashPanel : public Panel {
   public:
-    SplashPanel(NhdDisplay* disp_ptr, Encoder* encoder_ptr, ButtonManager* em_button_ptr, ButtonManager* stop_button_ptr, VentSettings* vs_ptr, String text[4], int display_time, Panel* next_ptr);
+    SplashPanel(NhdDisplay* disp_ptr, Encoder* encoder_ptr, ButtonManager* em_button_ptr, ButtonManager* stop_button_ptr, VentSettings* vs_ptr, String* text, int display_time, Panel** next_ptr);
 
-    void start() = 0;
-    Panel* update() = 0;
+    void start();
+    Panel* update();
 
   private:
     // Used for basic prompts, displays the panel for this number of ms.
     int _display_time;
-    String _text[4];
+    String* _text;
 
+    Panel** _next_d_ptr;
     Panel* _next_ptr;
 
 };
 
 class EditPanel : public Panel {
   public:
-    EditPanel(NhdDisplay* disp_ptr, Encoder* encoder_ptr, ButtonManager* em_button_ptr, ButtonManager* stop_button_ptr, VentSettings* vs_ptr, String top_text, Panel* run_panel_ptr, Panel* stop_panel_ptr);
+    EditPanel(NhdDisplay* disp_ptr, Encoder* encoder_ptr, ButtonManager* em_button_ptr, ButtonManager* stop_button_ptr, VentSettings* vs_ptr, String top_text, Panel** run_panel_ptr, Panel** stop_panel_ptr);
 
-    void start() = 0;
-    Panel* update() = 0;
+    void start();
+    Panel* update();
 
   private:
+
+    EncoderManager* _em_ptr;
 
     String _top_text;
     
@@ -65,6 +68,8 @@ class EditPanel : public Panel {
     String _i_e_text = "I:E = ";
     int _i_e_text_length = 8;
 
+    Panel** _run_panel_d_ptr;
+    Panel** _stop_panel_d_ptr;
     Panel* _run_panel_ptr;
     Panel* _stop_panel_ptr;
 
@@ -82,26 +87,28 @@ class EditPanel : public Panel {
 
     int _row = 0;
     bool _edit = false;
+    int _old_selection = 0;
 
 };
 
 class RunningPanel : public Panel {
   public:
-    RunningPanel(NhdDisplay* disp_ptr, Encoder* encoder_ptr, ButtonManager* em_button_ptr, ButtonManager* stop_button_ptr, VentSettings* vs_ptr, Panel* stop_panel_ptr);
+    RunningPanel(NhdDisplay* disp_ptr, Encoder* encoder_ptr, ButtonManager* em_button_ptr, ButtonManager* stop_button_ptr, VentSettings* vs_ptr, Panel** apply_panel_ptr, Panel** stop_panel_ptr);
 
-    void start() = 0;
-    Panel* update() = 0;
+    void start();
+    Panel* update();
 
     String formatTime();
 
   private:
 
+    Panel** _apply_panel_d_ptr;
+    Panel** _stop_panel_d_ptr;
+    Panel* _apply_panel_ptr;
     Panel* _stop_panel_ptr;
 
-    String _top_text = "TimeElap: ";
-    int _text_length_to_hours = 10;
-    int _text_length_to_min = 13;
-    int _text_length_to_sec = 16;
+    String _top_text = "Run Time: ";
+    int _text_length_to_time = 10;
 
     String _tv_text = "TV = ";
     String _tv_units = "mL";
@@ -115,9 +122,34 @@ class RunningPanel : public Panel {
 
 class PausePanel : public Panel {
   public:
-    PausePanel(NhdDisplay* disp_ptr, Encoder* encoder_ptr, ButtonManager* em_button_ptr, ButtonManager* stop_button_ptr, VentSettings* vs_ptr);
+    PausePanel(NhdDisplay* disp_ptr, Encoder* encoder_ptr, ButtonManager* em_button_ptr, ButtonManager* stop_button_ptr, VentSettings* vs_ptr, Panel** apply_panel_ptr, Panel** run_panel_ptr);
 
-    void start() = 0;
-    Panel* update() = 0;
+    void start();
+    Panel* update();
+
+  private:
+
+    EncoderManager* _em_ptr;
+
+    Panel** _apply_panel_d_ptr;
+    Panel** _run_panel_d_ptr;
+    Panel* _apply_panel_ptr;
+    Panel* _run_panel_ptr;
+    // Looks like " T00:11:22 Run/Edit?"
+
+    String _top_before_time = "T";
+    String _top_after_time = " Run/Edit?";
+    int _text_length_to_run = 12;
+    int _text_length_to_edit = 16;
+
+    String _tv_text = "TV = ";
+    String _tv_units = "mL";
+
+    String _rr_text = "RR = ";
+    String _rr_units = "BPM";
+
+    String _i_e_text = "I:E = ";
+
+    int _selection = 0;
 };
 #endif

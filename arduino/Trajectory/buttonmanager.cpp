@@ -4,7 +4,7 @@
 
 ButtonManager::ButtonManager(int pin, bool high_default):
   _last_state(false),
-  _debounce_delay(50),
+  _debounce_delay(100),
   _button_pin(pin),
   _high_default(high_default) {}
 

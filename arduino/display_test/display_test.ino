@@ -1,75 +1,75 @@
-#include "nhd_0420d3z.h"
-#include "Encoder.h"
-#include "encodermanager.h"
-#include "buttonmanager.h"
-#include "ventsettings.h"
+#include "panel.h"
 
 NhdDisplay display(3);
 Encoder enc(5,6);
-EncoderManager man(&enc, 4, 2);
 ButtonManager encoder_button(7, true);
 ButtonManager stop_button(11, false);
 
 // Default settings
 VentSettings vs = {'X', 12, 1, 3, 500, 0, 0, 0, 0}; 
 
-long pos = -999;
-int row = 0;
-int old_row = 1;
+// String params
+String* splash_text = new String[4];
+
+
+String* warning_text = new String[4];
+SplashPanel* splash_ptr;
+SplashPanel* warning_ptr;
+EditPanel* start_ptr;
+EditPanel* apply_ptr;
+RunningPanel* run_ptr;
+PausePanel* pause_ptr;
+
+Panel* cur_panel;
 
 void setup()
 {
   Serial.begin(9600);
   display.begin(9600);
   display.clearDisplay();
-  display.setCursor(1,0);
-  display.print("Hello world!");
-  display.setCursor(1,1);
-  display.print("Display working!");
-  display.setCursor(1,2);
-  int test = 40;
-  char arr[100];
-  sprintf(arr, "Number %i", test);
-  display.print(arr);
-  display.setCursor(1,3);
-  display.print(String(vs.tidal_volume));
-  
-  display.setCursor(0,1);
-  display.print(">");
 
-  man.start();
+  // Init slash text.
+  splash_text[0] = "";
+  splash_text[1] = "       Apollo";
+  splash_text[2] = "        BVM";
+  splash_text[3] = "";
+
+  //Init warning text.
+  warning_text[0] = "      WARNING: ";
+  warning_text[1] = "      USE ADULT ";
+  warning_text[2] = "        SIZED";
+  warning_text[3] = "         BVM ";
+
+  // Init panels.
+  start_ptr = new EditPanel(&display, &enc, &encoder_button, &stop_button, &vs, "Confirm & Run?", &run_ptr, &pause_ptr);
+  warning_ptr = new SplashPanel(&display, &enc, &encoder_button, &stop_button, &vs, warning_text, 2000, &start_ptr);
+  splash_ptr = new SplashPanel(&display, &enc, &encoder_button, &stop_button, &vs, splash_text, 2000, &warning_ptr);
+  apply_ptr = new EditPanel(&display, &enc, &encoder_button, &stop_button, &vs, "Apply Changes?", &run_ptr, &pause_ptr);
+  run_ptr = new RunningPanel(&display, &enc, &encoder_button, &stop_button, &vs, &apply_ptr, &run_ptr);
+  pause_ptr = new PausePanel(&display, &enc, &encoder_button, &stop_button, &vs, &start_ptr, &run_ptr);
+
+  delay(500);
+
+  // Set current panel to splash.
+  cur_panel = splash_ptr;
+  cur_panel->start();
+
 }
 
 void loop()
 {
-  man.poll();
   encoder_button.poll();
   stop_button.poll();
 
-  int pos = man.getSelection();
-  /*Serial.println(pos);*/
+  Serial.println(encoder_button.getButtonState());
+  Serial.println(stop_button.getButtonState());
 
-  if (encoder_button.getButtonState()) {
-    Serial.println("encoder pressed!"); 
-    man.setNumOptions(2);
-    man.setSelection(1);
-  }
-  if (stop_button.getButtonState()) {
-    Serial.println("stop pressed!"); 
-  }
+  Panel* new_panel = cur_panel->update();
 
-  writeCursor(pos);
+  if (new_panel != 0) {
+    cur_panel = new_panel;
+    cur_panel->start();
+  }
 
 }
 
-void writeCursor(int row) {
-  if (row != old_row) {
-    display.setCursor(0,old_row);
-    /*display.print("");*/
-    display.remove();
-
-    display.setCursor(0,row);
-    display.print(">");
-    old_row = row;
-  }
-}
