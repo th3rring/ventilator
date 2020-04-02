@@ -50,7 +50,11 @@ void EditPanel::start() {
 
   // Dereference double pointer to panels.
   _run_panel_ptr = *_run_panel_d_ptr;
-  _stop_panel_ptr = *_stop_panel_d_ptr;
+  if (_stop_panel_d_ptr != 0) {
+    _stop_panel_ptr = *_stop_panel_d_ptr;
+  } else {
+    _stop_panel_ptr = 0;
+  }
 
   // Start the selection encoder.
   _em_ptr->start();
@@ -72,19 +76,20 @@ void EditPanel::start() {
 
   // Write third line and add default respiration rate value.
   _disp_ptr->setCursor(1, 2);
-  _disp_ptr->print(_rr_text + _vs_ptr->respiration_rate + _rr_units);
+  _disp_ptr->print(_rr_text + _disp_ptr->zeroPad(_vs_ptr->respiration_rate) + _rr_units);
   
   // Write fourth line and add default i:e ratio.
   _disp_ptr->setCursor(1, 3);
   _disp_ptr->print(_i_e_text + _vs_ptr->inhale + ':' + _vs_ptr->exhale);
+
+  // Mark that the user hasn't made a change.
+  _made_change = false;
   
-  // Reset time when endering edit panel.
-  _vs_ptr->hours = 0;
-  _vs_ptr->minute = 0;
-  _vs_ptr->seconds = 0;
 }
 
 Panel* EditPanel::update() {
+
+  // Update encoder manager for new positions.
    _em_ptr->poll();
 
   // Check if we have a non-zero stop panel pointer and return if button pushed.
@@ -97,6 +102,14 @@ Panel* EditPanel::update() {
 
     // Selected confirm settings, exit and run device.
     if (_row == 0) {
+
+      if (_made_change) {
+        // Reset time when endering edit panel.
+        _vs_ptr->hours = 0;
+        _vs_ptr->minute = 0;
+        _vs_ptr->seconds = 0;
+      }
+
       return _run_panel_ptr;
     }
 
@@ -113,17 +126,17 @@ Panel* EditPanel::update() {
     switch (_row) {
       // Set selections for tidal volume.
       case 1:
-        num_selections = (_max_tidal_volume - _min_tidal_volume) / _delta_tidal_volume;
+        num_selections = (_max_tidal_volume - _min_tidal_volume) / _delta_tidal_volume + 1;
         starting_selection = (_vs_ptr->tidal_volume - _min_tidal_volume) / _delta_tidal_volume;
         break;
       // Set selections for respiration rate.
       case 2:
-        num_selections = (_max_respiration_rate - _min_respiration_rate) / _delta_respiration_rate;
+        num_selections = (_max_respiration_rate - _min_respiration_rate) / _delta_respiration_rate + 1;
         starting_selection = (_vs_ptr->respiration_rate - _min_respiration_rate) / _delta_respiration_rate;
         break;
       // Set selections for i:e ratio.
       case 3:
-        num_selections = (_max_exhale - _min_exhale) / _delta_exhale;
+        num_selections = (_max_exhale - _min_exhale) / _delta_exhale + 1;
         starting_selection = (_vs_ptr->exhale - _min_exhale) / _delta_exhale;
         break;
     }
@@ -141,6 +154,10 @@ Panel* EditPanel::update() {
   } else if (_edit && !_em_button_ptr->getButtonState()) {
 
     if (_em_ptr->getSelection() != _old_selection){
+
+      // Mark that the user made a change.
+      _made_change = true;
+
       switch (_row) {
         // Edit tidal volume.
         case 1:
@@ -159,7 +176,7 @@ Panel* EditPanel::update() {
           
           // Write to the display.
           _disp_ptr->setCursor(1 + _rr_text_length, 2);
-          _disp_ptr->print(_vs_ptr->respiration_rate);
+          _disp_ptr->print(_disp_ptr->zeroPad(_vs_ptr->respiration_rate));
           break;
 
         // Edit i:e ratio.
@@ -220,7 +237,7 @@ RunningPanel::RunningPanel(NhdDisplay* disp_ptr, Encoder* encoder_ptr, ButtonMan
   _stop_panel_d_ptr(stop_panel_ptr) {}
 
 String RunningPanel::formatTime() {
-  return String(_vs_ptr->hours) + ":" + String(_vs_ptr->minute) + ":" + String(_vs_ptr->seconds);
+  return _disp_ptr->zeroPad(_vs_ptr->hours) + ":" + _disp_ptr->zeroPad(_vs_ptr->minute) + ":" + _disp_ptr->zeroPad(_vs_ptr->seconds);
 }
 
 void RunningPanel::start() {
@@ -232,6 +249,7 @@ void RunningPanel::start() {
 
   // Change mode to load new settings.
   _vs_ptr->mode = 'L';
+  _vs_ptr->send = true;
 
   // Clear display.
   _disp_ptr->clearDisplay();
@@ -246,7 +264,7 @@ void RunningPanel::start() {
 
   // Write third line and add default respiration rate value.
   _disp_ptr->setCursor(1, 2);
-  _disp_ptr->print(_rr_text + _vs_ptr->respiration_rate + _rr_units);
+  _disp_ptr->print(_rr_text + _disp_ptr->zeroPad(_vs_ptr->respiration_rate) + _rr_units);
   
   // Write fourth line and add default i:e ratio.
   _disp_ptr->setCursor(1, 3);
@@ -284,7 +302,8 @@ Panel* RunningPanel::update() {
     }
 
     // Update time on display.
-    _disp_ptr->setCursor(_text_length_to_time, 0);
+    // Add 1 to the text length to accoud for empty column for cursor.
+    _disp_ptr->setCursor(_text_length_to_time + 1, 0);
     _disp_ptr->print(formatTime());
   }
   return 0;
@@ -310,13 +329,16 @@ void PausePanel::start() {
 
   // Change mode to stop operation.
   _vs_ptr->mode = 'X';
+  _vs_ptr->send = true;
 
   // Clear display.
   _disp_ptr->clearDisplay();
 
   // Write first line.
   _disp_ptr->setCursor(1, 0);
-  _disp_ptr->print(_top_before_time + _vs_ptr->hours + ":" + _vs_ptr->minute + ":" + _vs_ptr->seconds + _top_after_time);
+  _disp_ptr->print(_top_before_time); 
+  _disp_ptr->print(_disp_ptr->zeroPad(_vs_ptr->hours) + ":" + _disp_ptr->zeroPad(_vs_ptr->minute) + ":" + _disp_ptr->zeroPad(_vs_ptr->seconds));
+  _disp_ptr->print(_top_after_time);
 
   // Write second line and add default tidal volume value.
   _disp_ptr->setCursor(1, 1);
@@ -337,6 +359,9 @@ void PausePanel::start() {
 }
 
 Panel* PausePanel::update() {
+  
+  // Poll encoder for updates.
+  _em_ptr->poll();
 
   // If encoder button pushed over run, exit and start running.
   if (_selection == 0 && _em_button_ptr->getButtonState()) {

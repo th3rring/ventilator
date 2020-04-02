@@ -92,3 +92,9 @@ void NhdDisplay::remove() {
   moveCursorRight();
   backspace();
 }
+
+String NhdDisplay::zeroPad(int in) {
+  char digit[2];
+  sprintf(digit, "%02d", in);
+  return String(digit);
+}

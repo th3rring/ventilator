@@ -30,7 +30,6 @@ void loop() {
 
 void transmitTraj() {
 
-  Wire.beginTransmission(8); // transmit to device #8
   /*if (on) {*/
   Wire.write('L');
   /*if (wave) {*/

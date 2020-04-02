@@ -59,11 +59,11 @@ class EditPanel : public Panel {
     
     String _tv_text = "TV = ";
     int _tv_text_length = 5;
-    String _tv_units = "mL";
+    String _tv_units = " mL";
 
     String _rr_text = "RR = ";
     int _rr_text_length = 5;
-    String _rr_units = "BPM";
+    String _rr_units = " BPM";
 
     String _i_e_text = "I:E = ";
     int _i_e_text_length = 8;
@@ -88,6 +88,7 @@ class EditPanel : public Panel {
     int _row = 0;
     bool _edit = false;
     int _old_selection = 0;
+    bool _made_change = false;
 
 };
 
@@ -111,10 +112,10 @@ class RunningPanel : public Panel {
     int _text_length_to_time = 10;
 
     String _tv_text = "TV = ";
-    String _tv_units = "mL";
+    String _tv_units = " mL";
 
     String _rr_text = "RR = ";
-    String _rr_units = "BPM";
+    String _rr_units = " BPM";
 
     String _i_e_text = "I:E = ";
 
@@ -139,14 +140,14 @@ class PausePanel : public Panel {
 
     String _top_before_time = "T";
     String _top_after_time = " Run/Edit?";
-    int _text_length_to_run = 12;
-    int _text_length_to_edit = 16;
+    int _text_length_to_run = 11;
+    int _text_length_to_edit = 15;
 
     String _tv_text = "TV = ";
-    String _tv_units = "mL";
+    String _tv_units = " mL";
 
     String _rr_text = "RR = ";
-    String _rr_units = "BPM";
+    String _rr_units = " BPM";
 
     String _i_e_text = "I:E = ";
 

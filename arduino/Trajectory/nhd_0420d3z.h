@@ -34,6 +34,8 @@ class NhdDisplay {
     void backspace();
     void remove();
 
+    String zeroPad(int in);
+
   private:
     SoftwareSerial* _serial_ptr;
     byte _row;

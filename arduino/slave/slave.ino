@@ -2,6 +2,7 @@
 #include <Servo.h>
 #include <trajfactory.h>
 
+#define SLAVE_ADDR 8
 #define SERVO_MIN 2490
 #define SERVO_MAX 500
 
@@ -10,19 +11,18 @@ Trajectory* traj_ptr = 0;
 Trajectory* temp  = 0;
 
 int rr;
-int delta_t;
 float ie;
 int setpoint;
 float hold;
+int delta_t;
 
 Servo servo;
 
 char state;
 
 void setup() {
-  Wire.begin(8);                // join i2c bus with address #8
+  Wire.begin(SLAVE_ADDR);                // join i2c bus with address #8
   Wire.onReceive(recieveTraj); // register event
-  /*Serial.begin(115200);           // start serial for output*/
   Serial.begin(9600);           // start serial for output
 
   // Attach servo
@@ -31,22 +31,18 @@ void setup() {
 }
 
 void loop() {
-  /*if(Serial.available()>0) {*/
-      /*length = Serial.parseInt();*/
-      /*String test[length];*/
 
-      /*int num_packets = Serial.parseInt();*/
-      /*int per_packet = Serial.parseInt();*/
-   /*}*/
-  /*Serial.println(mode);*/
-
+  /*Serial.println(state);*/
   switch (state) {
+    // Device is on, continue following trajectory.
     case 'O': 
       moveTo(traj_ptr->nextStep(), traj_ptr->getDeltaTime());
       break;
+    // Device has been instructed to shutdown.
     case 'X':
       stop();
       break;
+    // Device has recieved a new trajectory, load and start.
     case 'L':
 
       // Stop motion.
@@ -66,57 +62,65 @@ void loop() {
 
   }
 
-  if (state == 'O') {
-  }
 }
 
 void moveTo(int pos, int delta_t){
-  Serial.println(pos);
+  /*Serial.println(pos);*/
   servo.writeMicroseconds(SERVO_MIN-pos);
   delay(delta_t);
 }
 
 void stop(){
-      if (traj_ptr != 0) {
-        while (traj_ptr->getCurrentStep() != 0) {
-          moveTo(traj_ptr->nextStep(), traj_ptr->getDeltaTime());
-        }
-      }
+  
+  // If we have already generated a traj, follow it till the end.
+  if (traj_ptr != 0) {
+    while (traj_ptr->getCurrentStep() != 0) {
+      moveTo(traj_ptr->nextStep(), traj_ptr->getDeltaTime());
+    }
+  // If not, got to 0 position.
+  } else {
+    moveTo(SERVO_MAX, 100);
+  }
 }
 
 // function that executes whenever data is received from master
 // this function is registered as an event, see setup()
 void recieveTraj(int num_entries) {
-  /*String s = "";*/
-  /*while (1 < Wire.available()) { // loop through all but the last*/
-    /*char c = Wire.read(); // receive byte as a character*/
-  /*}*/
-  state = Wire.read();
 
-  switch (state) {
+  // Read the state from incoming transmission.
+  char recieved_state = Wire.read();
+
+  // Either change machine state or load new settings.
+  switch (recieved_state) {
     case 'X':
       state = 'X';
       break;
-    case 'O':
-      state = 'O';
-      break;
     case 'L':
+      state = 'L';
+
+      Serial.println("Loading...");
       // Load new params
+      byte high = Wire.read();
+      byte low = Wire.read();
+      setpoint = (high << 8) | low;
+      Serial.println(setpoint);
+
       rr = Wire.read();
+      Serial.println(rr);
 
       byte inhale = Wire.read();
       byte exhale = Wire.read();
       ie = float(inhale) / exhale;
-
-      byte high = Wire.read();
-      byte low = Wire.read();
-      setpoint = (high << 8) | low;
-
-      delta_t = Wire.read();
+      Serial.println(ie);
 
       byte hold_s = Wire.read();
       byte hold_dec = Wire.read();
       hold = hold_s + hold_dec/100.0;
+      Serial.println(hold);
+
+      delta_t = Wire.read();
+      Serial.println(delta_t);
+
 
       break;
   }

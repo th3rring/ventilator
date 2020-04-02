@@ -13,6 +13,9 @@ void ButtonManager::poll() {
 
   bool reading = false;
 
+  // Set the trigger variable to false by default.
+  _trigger = false;
+
   if (_high_default) {
     if (digitalRead(_button_pin) == LOW){
       reading = true;
@@ -39,8 +42,13 @@ void ButtonManager::poll() {
     // delay, so take it as the actual current state:
 
     // if the button state has changed:
-    if (reading != _button_state)
+    if (reading != _button_state) {
       _button_state = reading;
+
+      if (_button_state) {
+        _trigger = true;
+      }
+    }
 
   }
 
@@ -50,7 +58,8 @@ void ButtonManager::poll() {
 }
 
 bool ButtonManager::getButtonState(){
-  return _button_state;
+  //return _button_state;
+  return _trigger;
 }
 
 
