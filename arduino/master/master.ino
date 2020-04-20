@@ -1,65 +1,125 @@
-#include <Wire.h>
+#include "panel.h"
+#include "Wire.h"
 
-#define button_pin 7
+#define SLAVE_ADDR 8
 
-using uint = unsigned int;
+NhdDisplay display(3);
+Encoder enc(5,6);
+ButtonManager encoder_button(7, true);
+ButtonManager stop_button(11, false);
 
-bool wave = true;
-bool on = true;
+// Default settings
+VentSettings vs = {'X', 500, 12, 1, 3, 0, 0, 20, 0, 0, 0, false}; 
 
-void setup() {
-  Wire.begin(); // join i2c bus (address optional for master)
-  pinMode(button_pin, INPUT);
+// String params
+String* splash_text = new String[4];
+
+
+String* warning_text = new String[4];
+SplashPanel* splash_ptr;
+SplashPanel* warning_ptr;
+EditPanel* start_ptr;
+EditPanel* apply_ptr;
+RunningPanel* run_ptr;
+PausePanel* pause_ptr;
+
+Panel* cur_panel;
+
+void setup()
+{
+
+  // Join i2c bus.
+  Wire.begin();
+
+  // Start serial debug connection.
   Serial.begin(9600);
+
+  // Start display.
+  display.begin(9600);
+  display.clearDisplay();
+
+  // Init slash text.
+  splash_text[0] = "";
+  splash_text[1] = "       Apollo";
+  splash_text[2] = "        BVM";
+  splash_text[3] = "";
+
+  //Init warning text.
+  warning_text[0] = "      WARNING: ";
+  warning_text[1] = "      USE ADULT ";
+  warning_text[2] = "        SIZED";
+  warning_text[3] = "         BVM ";
+
+  // Init panels.
+  start_ptr = new EditPanel(&display, &enc, &encoder_button, &stop_button, &vs, "Confirm & Run?", &run_ptr, 0);
+  warning_ptr = new SplashPanel(&display, &enc, &encoder_button, &stop_button, &vs, warning_text, 2000, &start_ptr);
+  splash_ptr = new SplashPanel(&display, &enc, &encoder_button, &stop_button, &vs, splash_text, 2000, &warning_ptr);
+  apply_ptr = new EditPanel(&display, &enc, &encoder_button, &stop_button, &vs, "Apply Changes?", &run_ptr, &pause_ptr);
+  run_ptr = new RunningPanel(&display, &enc, &encoder_button, &stop_button, &vs, &apply_ptr, &pause_ptr);
+  pause_ptr = new PausePanel(&display, &enc, &encoder_button, &stop_button, &vs, &start_ptr, &run_ptr);
+
+  // Delay just cause.
+  delay(100);
+
+  // Set current panel to splash.
+  cur_panel = splash_ptr;
+  cur_panel->start();
+
 }
 
-int button_state = 0;
+void loop()
+{
+  // Poll button status.
+  encoder_button.poll();
+  stop_button.poll();
 
-// First entry is the rotary position
-// Second entry is the time in 10s of miliseconds
+  // Update current panel.
+  Panel* new_panel = cur_panel->update();
 
-void loop() {
-  button_state = digitalRead(button_pin);
-
-  if (button_state == LOW) {
-    transmitTraj();
+  // If we get a new panel, start and switch to it.
+  if (new_panel != 0) {
+    cur_panel = new_panel;
+    cur_panel->start();
   }
 
-  delay(500);
+  // Transmit to the device if necessary.
+  if (vs.send)
+    transmit();
+
+
 }
 
-void transmitTraj() {
+void transmit() {
 
-  /*if (on) {*/
-  Wire.write('L');
-  /*if (wave) {*/
-  /*Wire.write(5);*/
-  /*wave = false;*/
-  /*} else {*/
+  // Transmit to the slave device.
+  Wire.beginTransmission(SLAVE_ADDR);
 
-  //Write RR
-  Wire.write(12); 
+  // Write the mode first.
+  Wire.write(vs.mode);
 
-  // Write inhale and exhale ratio
-  Wire.write(1);
-  Wire.write(3);
+  // Send settings to controller unit, if we're loading.
+  if (vs.mode == 'L') {
+      // TODO Build lookup table based on real information.
+      int setpoint = map(vs.tidal_volume, 300, 650, 500, 1900);
+      Wire.write(byte(setpoint >> 8));
+      Wire.write(byte(setpoint & 0x00FF));
+      Wire.write(byte(vs.respiration_rate));
+      Wire.write(byte(vs.inhale));
+      Wire.write(byte(vs.exhale));
+      Wire.write(byte(vs.hold_seconds));
+      Wire.write(byte(vs.hold_decimals));
+      Wire.write(byte(vs.delta_time));
 
-  // Write setpoint
-  int setpoint = 1300;
-  Wire.write(byte(setpoint >> 8));
-  Wire.write(byte(setpoint & 0x00FF));
+      // Set the mode to on as device will start.
+      vs.mode = 'O';
+  }
 
-  //Wire delta_t
-  Wire.write(20);
+  // Send i2c message.
+  Wire.endTransmission();
 
-  // Write hold as seconds and 10s of ms.
-  Wire.write(0);
-  Wire.write(0);
-  on = false;
-  /*} else {*/
-    /*Wire.write('X');*/
-    /*on = true;*/
-  /*}*/
+  // Sent settings so disable send.
+  vs.send = false;
 
-  Wire.endTransmission();    // stop transmitting
+
 }
+
